@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>团建随机分组小程序</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+        textarea { width: 100%; height: 150px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        button:hover { background-color: #0056b3; }
+        .result-area { margin-top: 20px; border-top: 2px solid #eee; padding-top: 20px; }
+        .group-card { background: #f9f9f9; margin-bottom: 10px; padding: 10px; border-left: 4px solid #007bff; }
+        #searchResult { font-weight: bold; color: #d9534f; margin-top: 10px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<h1>团建分组程序</h1>
+
+<div class="container">
+    <div class="box">
+        <h3>1. 输入员工编号 (一行一个)</h3>
+        <textarea id="inputList" placeholder="例如：
+001
+002
+003
+"></textarea>
+        <div style="margin-top:10px;">
+            分成 <input type="number" id="groupNum" value="4" style="width:50px;"> 组
+        </div>
+        <button onclick="generateGroups()">开始随机分组</button>
+    </div>
+
+    <div class="box">
+        <h3>2. 查询员工分组</h3>
+        <input type="text" id="searchInput" placeholder="输入编号或姓名" style="width: 70%; padding: 8px;">
+        <button onclick="findUser()" style="margin-top:0;">查询</button>
+        <div id="searchResult"></div>
+    </div>
+</div>
+
+<div class="result-area" id="displayArea">
+    <h3>分组结果公示：</h3>
+    <div id="groupsOutput"></div>
+</div>
+
+<script>
+    let currentGroups = [];
+
+    function generateGroups() {
+        const rawText = document.getElementById('inputList').value;
+        let list = rawText.split('\n').map(item => item.trim()).filter(item => item !== "");
+        
+        if (list.length === 0) { alert("请输入员工编号！"); return; }
+        
+        for (let i = list.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [list[i], list[j]] = [list[j], list[i]];
+        }
+
+        const groupCount = parseInt(document.getElementById('groupNum').value);
+        currentGroups = Array.from({ length: groupCount }, () => []);
+
+        list.forEach((person, index) => {
+            currentGroups[index % groupCount].push(person);
+        });
+
+        renderGroups();
+        document.getElementById('searchResult').innerText = "";
+    }
+
+    function renderGroups() {
+        const container = document.getElementById('groupsOutput');
+        container.innerHTML = "";
+        currentGroups.forEach((group, index) => {
+            const div = document.createElement('div');
+            div.className = 'group-card';
+            div.innerHTML = `<strong>第 ${index + 1} 组:</strong> ${group.join(' , ')}`;
+            container.appendChild(div);
+        });
+    }
+
+    function findUser() {
+        const query = document.getElementById('searchInput').value.trim();
+        if (!query) return;
+        
+        let found = false;
+        for (let i = 0; i < currentGroups.length; i++) {
+            if (currentGroups[i].includes(query)) {
+                document.getElementById('searchResult').innerText = `"${query}" 被分配在【第 ${i + 1} 组】`;
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            document.getElementById('searchResult').innerText = `未找到 "${query}"，请检查输入或确认是否在名单中。`;
+        }
+    }
+</script>
+
+</body>
+</html>
